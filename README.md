@@ -1,8 +1,11 @@
-# (m4ud) Struts S2-045-RCE
+# (m4ud) Apache Struts S2-045-RCE  CVE-2017-5638
 
 
 
-    Options:
+    NT: Uses msfvenom create payloads based on chosen OS,
+    or you use only the -c flag to issue commands without lhost, lport, and osys!
+    
+      Options:
       -h, --help            show this help message and exit
       -p RPORT, --port=RPORT
                             RPORT,
