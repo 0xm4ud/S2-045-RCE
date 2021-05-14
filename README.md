@@ -2,7 +2,8 @@
 
 
 
-    NT: Uses msfvenom create payloads based on chosen OS or you use only the -c flag to issue commands without lhost, lport, and osys!
+    NT: Uses msfvenom create payloads based on chosen OS,
+    or you use only the -c flag to issue commands without lhost, lport, and osys!
     
       Options:
       -h, --help            show this help message and exit
