@@ -56,7 +56,6 @@ class AS045:
 #			proxies='http://127.0.0.1:8080'
 #			proxies = {'http' : proxies}
 			target = 'http://' + self.target #Vulnerable Server
-			print(target)
 			port = self.rport
 			directory = self.directory # Struts Application directory
 			cmd = self.command
