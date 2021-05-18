@@ -2,7 +2,7 @@
 
 
 
-    NT: Uses msfvenom create payloads based on chosen OS,
+    NT: Uses powershell, bash or msfvenom create payloads based on chosen OS,
     or you use only the -c flag to issue commands without lhost, lport, and osys!
     
       Options:
@@ -20,6 +20,7 @@
                             LHOST
       -P LPORT, --lport=LPORT
                             LPORT
-
+      -s SHELL, --shell=SHELL
+                            Shell type: 1 = powershell or bash, and 2 = msfvenom
 
 
